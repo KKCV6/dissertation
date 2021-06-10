@@ -6,7 +6,6 @@ library(magrittr)
 library(tmap)
 library(dbscan)
 library(tidygraph)
-library(spNetwork)
 library(stplanr)
 library(tidyverse)
 library(spatstat)
@@ -28,9 +27,12 @@ tmap_mode("view")
   #filter
   monduli_district <- filter(tnz_districts, NAME_2 == "Monduli")
   monduli_bf <-  tnz_bf[monduli_district,]
+  
+  #monduli_bf <- st_read('data/footprints/monduli_bf.shp') #alternative
 
 
-#Step 1) Create initial settlement outlines from building footprints
+#Step 1) Create initial settlement outlines from building footprints 
+    #Note the whole step must be run to achieve correct output
   
   #centroids
   centroids <- st_centroid(monduli_bf)
@@ -79,7 +81,8 @@ tmap_mode("view")
   tm_shape(bf_outlines) + tm_borders()
   
 #Step 2) Create catchment areas from the building outline footprints
-
+  #Note the whole step must be run to achieve correct output
+  
   #centroids
   centroids <- st_point_on_surface(bf_outlines)
   tm_shape(bf_outlines) + tm_borders() + tm_shape(centroids)+tm_dots()
@@ -143,7 +146,8 @@ tm_shape(catch_outlines) + tm_borders()+
     tm_borders()
 
 #Step 4) Create the final settlement outlines, grouping smaller polygons (step 1) by their catchment (step 2)
-
+  #Note the whole step must be run to achieve correct output
+  
   catchments <- bf_outlines %>% group_by(over_id) %>% st_cast("POINT")  
 
   catchments <- catchments %>% drop_na(over_id) %>% st_as_sf() #drop NA points as these are standalone settlements
@@ -232,16 +236,24 @@ tm_shape(catch_outlines) + tm_borders()+
     #have a look at our final outlines
   
    tm_shape(final_outlines)+
-    tm_polygons(col = "purple", alpha = 0.5)
+    tm_polygons(col = "purple", alpha = 0.5)+
+     tm_scale_bar(position = c("left", "bottom"))
    
    #export
    st_write(final_outlines, "data/settlement_outlines/final_outlines.shp", delete_layer = TRUE)
    
-   final_outlines <- st_read('data/settlement_outlines/final_outlines.shp')
+   final_outlines <- st_read('data/settlement_outlines/final_outlines.shp') %>% st_transform(crs = 32737)
 
 #Step 5) Calculate areas
    
-   final_outlines$shape_area <- area(final_outlines) #not yet working
+   final_outlines$area_sqm <- st_area(final_outlines)
+   
+   final_outlines$area_sqkm <- units::set_units(final_outlines$area_sqm, km^2) #add as_numeric to remove units
+   
+   tm_shape(final_outlines)+
+     tm_polygons("area_sqkm", alpha = 0.5, palette = "viridis", style = "jenks")+
+     tm_scale_bar(position = c("left", "bottom"))+
+     tm_shape(monduli_district)+tm_borders(col = "gray")
 
 #Step 6) Ground truth against GRID 3 data
    
