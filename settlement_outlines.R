@@ -40,6 +40,8 @@ tmap_mode("view")
   #points
   points <- st_coordinates(centroids)
   
+  tm_shape(centroids)+tm_dots()
+  
   #DBScan
   dbscan <- dbscan::dbscan(points, eps = 0.001, minPts = 5)
   plot(points, col=dbscan$cluster)
@@ -137,8 +139,10 @@ tm_shape(catch_outlines) + tm_borders()+
   sett_sp <- as(catch_outlines, 'Spatial')
 
   over_ID <- over(mon_sp, sett_sp, fn=NULL)
+  
+  over_ID$ID <- over_ID$FID + 1 #subsequent calcs do not deal with 0 value
 
-  bf_outlines$over_id <- over_ID$FID
+  bf_outlines$over_id <- over_ID$ID
 
   tm_shape(bf_outlines)+
     tm_polygons(col = "over_id")+
@@ -225,7 +229,7 @@ tm_shape(catch_outlines) + tm_borders()+
 
   outline_buffer <- st_transform(outlines, crs = 32737)
   
-  outline_buffer<- st_buffer(outline_buffer, 150,  endCapStyle = "FLAT", joinStyle = "MITRE") %>% st_union()
+  outline_buffer<- st_buffer(outline_buffer, 200,  endCapStyle = "FLAT", joinStyle = "MITRE") %>% st_union()
 
   outline_buffer <- st_cast(outline_buffer, "POLYGON")
 
@@ -255,7 +259,42 @@ tm_shape(catch_outlines) + tm_borders()+
      tm_scale_bar(position = c("left", "bottom"))+
      tm_shape(monduli_district)+tm_borders(col = "gray")
 
-#Step 6) Ground truth against GRID 3 data
+#Step 6) Does the data look right?
+   
+   #how many building footprints are within each settlement
+    
+   centroids <- st_centroid(monduli_bf)
+   
+   centroids_proj <- st_transform(centroids, crs = 32737)
+   
+   final_outlines$pt_count <- lengths(st_intersects(final_outlines, centroids_proj))
+   
+   edited_outlines <- final_outlines %>% filter(pt_count >3)
+   
+   tm_shape(edited_outlines)+tm_polygons(col = "pt_count", alpha = 0.5, palette = "viridis")+
+     tm_shape(monduli_district)+tm_borders()
+   
+  #which building footprints are outside the settlements?
+   
+   centroids_proj$outside_outlines <- sapply(st_intersects(centroids_proj, edited_outlines),function(x){length(x)==0})
+   
+   outliers <- centroids_proj %>% filter(outside_outlines == "TRUE")
+   
+   tm_shape(outliers)+tm_dots()+
+     tm_shape(edited_outlines)+tm_borders()
+
+   na_centroids <- st_transform(outliers, crs = 32737)
+   
+   na_centroids <- st_centroid(na_centroids)
+   
+   na_buffer <- st_buffer(na_centroids, 100)
+   
+   tm_shape(na_buffer)+tm_borders()+
+     tm_shape(na_centroids)+tm_dots()
+   
+   na_buffer$pt_count <- lengths(st_intersects(na_buffer, na_centroids))
+   
+   #Step 6) Ground truth against GRID 3 data
    
    # List feature classes
    rgdal::ogrListLayers('data/ground-truth/GRID/GRID3_TZA_SettlementExtents_V01Alpha/GRID3_TZA_settlement_extents_20200425.gdb')
