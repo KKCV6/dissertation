@@ -9,3 +9,9 @@ Dataset       | Download Location
 Microsoft     | [Link](https://github.com/microsoft/Uganda-Tanzania-Building-Footprints, "Link")
 HOT OSM       | [Link](https://data.humdata.org/dataset/hotosm_tza_buildings, "Link")
 
+## Final Outlines ##
+
+The final settlement outlines delinated as part of this analysis can be seen below:
+
+
+
