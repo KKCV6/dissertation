@@ -1,7 +1,11 @@
-# Delineating Settlement Outlines in Monduli, Tanzania
+# Delineating Settlement Outlines in Monduli, Tanzania #
 This research project focuses on delineating settlement outlines from openly accessible building footprint data, contributing to the Data for Good Movement by outputting vector polygons fully integratable with OSM.
 
-Data Sources
+## Data Sources ##
 Two sources of building footprints are used in this analysis:
-Microsoft - downloadble from the “https://github.com/microsoft/Uganda-Tanzania-Building-Footprints”
-OSM - downloadable from HOT: "https://data.humdata.org/dataset/hotosm_tza_buildings”. 
+
+Dataset       | Download Location
+------------- | -------------
+Microsoft     | [Link](https://github.com/microsoft/Uganda-Tanzania-Building-Footprints, "Link")
+HOT OSM       | [Link](https://data.humdata.org/dataset/hotosm_tza_buildings, "Link")
+
