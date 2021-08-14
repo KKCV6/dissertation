@@ -13,5 +13,5 @@ HOT OSM       | [Link](https://data.humdata.org/dataset/hotosm_tza_buildings, "L
 
 The final settlement outlines delinated as part of this analysis can be seen below:
 
-Markup : ![picture alt](http://via.placeholder.com/200x150 "Title is optional")
+Markup : ![picture alt](https://github.com/KKCV6/dissertation/blob/main/images/settlements.png)
 
