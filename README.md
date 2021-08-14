@@ -4,4 +4,4 @@ This research project focuses on delineating settlement outlines from openly acc
 Data Sources
 Two sources of building footprints are used in this analysis:
 Microsoft - downloadble from the “https://github.com/microsoft/Uganda-Tanzania-Building-Footprints”
-OSM - downloadable from HOT: ttps://data.humdata.org/dataset/hotosm_tza_buildings”. 
+OSM - downloadable from HOT: "https://data.humdata.org/dataset/hotosm_tza_buildings”. 
