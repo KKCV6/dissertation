@@ -37,6 +37,8 @@ tmap_mode("view")
   
   osm_footprints <- osm_footprints[,-(1:35)]
   
+  st_write(osm_footprints, 'data/footprints/osm_footprints_R.shp')
+  
   #isolate non-intersecting footprints
   
   non_overlapping <-  monduli_bf[lengths(st_intersects(monduli_bf,osm_footprints))==0,] %>% st_cast('MULTIPOLYGON')
@@ -104,31 +106,20 @@ tmap_mode("view")
 
   hulls <- st_sfc(geometry_list, crs = 32737)
 
-  st_write(hulls, "data/settlement_outlines/bf_outlines.shp", delete_layer = TRUE)
+  st_write(hulls, "data/final/bf_outlines.shp", delete_layer = TRUE)
 
-  bf_outlines <- st_read('data/settlement_outlines/bf_outlines.shp')
+  bf_outlines <- st_read('data/final/bf_outlines.shp')
 
   bf_outlines <- st_transform(bf_outlines, crs = 32737)
 
   bf_outlines <- bf_outlines %>% filter(!st_is_empty(.))
   
-  tm_shape(bf_outlines)+tm_borders()
-  
   multi_points <- st_cast(bf_outlines, "MULTIPOINT")
   border_points <- multi_points %>% group_by(FID) %>% st_cast("POINT")
   plot(border_points)
   
-  st_write(border_points, 'data/settlement_outlines/twentieth_run/buffer/border_points.shp')
+  st_write(border_points, 'data/final/border_points.shp')
 
-  #samples_per_polygon <- rep(4, nrow(bf_outlines))
-  
- # samples <- st_sample(bf_outlines, samples_per_polygon)
-  
-  #tm_shape(test)+tm_dots()+
-    #tm_shape(bf_outlines)+tm_borders()
-  
-  #st_write(test, 'data/settlement_outlines/sample_points.shp')
-  
 #Step 2) Create catchment areas from the building outline footprints
   #Note the whole step must be run to achieve correct output
   
@@ -136,7 +127,7 @@ tmap_mode("view")
   points <- st_coordinates(border_points)
   
     #dbscan
-  dbscan <- dbscan::dbscan(points, eps = 280, minPts = 10) 
+  dbscan <- dbscan::dbscan(points, eps = 300, minPts = 10) 
   plot(points, col=dbscan$cluster)
   plot(monduli_district$geometry, add=T)
 
@@ -166,9 +157,9 @@ tmap_mode("view")
 
   hulls <- st_sfc(geometry_list, crs = 32737)
 
-  st_write(hulls, "data/settlement_outlines/twentieth_run/catch_outlines.shp", delete_layer = TRUE)
+  st_write(hulls, "data/final/catch_outlines.shp", delete_layer = TRUE)
 
-  catch_outlines <- st_read('data/settlement_outlines/fiftenth_run/catch_outlines.shp') %>% st_transform(crs = 32737)
+  catch_outlines <- st_read('data/final/catch_outlines.shp') %>% st_transform(crs = 32737)
 
 tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   tm_shape(bf_outlines)+tm_polygons(col = "purple", alpha = 0.5)
@@ -181,11 +172,11 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   
   over_ID <- over(mon_sp, sett_sp, fn = NULL)
   
-  #over_ID <- st_join(bf_outlines, catch_outlines)
-  
   over_ID$ID <- over_ID$FID + 1 #subsequent calcs do not deal with 0 value
 
   bf_outlines$over_id <- over_ID$ID
+  
+  tmap_options(check.and.fix = TRUE)
 
   tm_shape(bf_outlines)+
     tm_polygons(col = "over_id")+
@@ -203,26 +194,19 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   
   bf_overid <- st_buffer(bf_overid, 1)
   
+  bp_sf <- st_as_sf(border_points)
+  
   catchments <- st_join(centroids, bf_overid) %>% st_transform(crs = 32737)
   
   catchments <- catchments %>% drop_na(over_id) #drop NA points as these are standalone settlements
   
   catchments <- catchments[,-(1)] #drop FID column
   
-  #tm_shape(catchments)+tm_dots()+
+  st_write(catchments, 'data/final/catchments.shp')
+  
+  catchments$over_id[catchments$over_id == 436] <- 435
 
-  #tm_shape(centroids)+tm_dots()
-  
-  #st_write(bf_overid, 'data/test/bf_overid.shp')
-  
-  #st_write(catchments, 'data/test/catchments.shp')
-  
- # st_read('data/test/catchments.shp')
-  
-  #catchments <- bf_outlines %>% group_by(over_id) %>% st_cast("POINT")
-  
-  #catchments <- catchments %>% drop_na(over_id) %>% st_as_sf()
-
+  #points
   points <- st_coordinates(catchments)
 
   #catchment clusters
@@ -244,7 +228,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
     
     points_wcluster_subset_coords <- points_wcluster_subset[c("X", "Y")]
     
-    concave_outline <- as.matrix(points_wcluster_subset_coords)  %>% concaveman()
+    concave_outline <- as.matrix(points_wcluster_subset_coords)  %>% concaveman(concavity = 1.5)
     
     coords <- as.data.frame(concave_outline)
     
@@ -257,11 +241,13 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   
   hulls <- st_sfc(geometry_list, crs = 32737)
 
-  st_write(hulls, "data/settlement_outlines/final/third_run/settlement_outlines.shp", delete_layer = TRUE)
+  st_write(hulls, "data/final/settlement_outlines.shp", delete_layer = TRUE)
 
-  settlement_outlines <- st_read('data/settlement_outlines/final/third_run/settlement_outlines.shp')
+  settlement_outlines <- st_read('data/final/settlement_outlines.shp')
+  
+  qtm(settlement_outlines)
 
-  tm_shape(settlement_outlines)+
+    tm_shape(settlement_outlines)+
     tm_polygons(col = "purple", alpha = 0.5)
 
   #Difference analysis to extract standalone settlements
@@ -274,9 +260,9 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
 
   settlement_outlines <- st_transform(settlement_outlines, crs = 32737)
   
-  st_write(catch_na, "data/settlement_outlines/final/third_run/catch_na.shp", delete_layer = TRUE)
+  st_write(catch_na, "data/final/catch_na.shp", delete_layer = TRUE)
 
-  catch_na <- st_read('data/settlement_outlines/final/third_run/catch_na.shp')
+  catch_na <- st_read('data/final/catch_na.shp')
 
     #check for matching columns, we will create new settlement IDs
   catch_na$over_id=NULL 
@@ -296,14 +282,13 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   final_outlines<-  outline_buffer %>% st_sf %>% st_cast()
   
   final_outlines$ID <- 1:nrow(final_outlines)
-
+  
     #have a look at our final outlines
   
    tm_shape(final_outlines)+
     tm_polygons(col = "purple", alpha = 0.5)+
-     tm_scale_bar(position = c("left", "bottom"))+
-    tm_shape(catch_outlines)+
-     tm_borders(col = "blue")
+     tm_scale_bar(position = c("left", "bottom"))
+   
     tm_basemap(leaflet::providers$Esri.WorldImagery)
      
 #Step 5) Calculate areas
@@ -316,7 +301,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    monduli_district$area_sqkm <- units::set_units(monduli_district$area_sqm, km^2)
    
-   sum(monduli_district$area_sqkm)
+   (sum(final_outlines$area_sqkm)/sum(monduli_district$area_sqkm))*100
    
 #Step 6) Does the data look right?
    
@@ -347,23 +332,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    summary(na_buffer$pt_count)
    
-   #all 4 or below
-
-   tm_shape(final_outlines)+
-     tm_polygons(col = "purple", alpha = 0.5)+
-     tm_scale_bar(position = c("left", "bottom"))+
-    tm_shape(bf_outlines)+
-     tm_borders(col = "white")+
-     tm_basemap(leaflet::providers$Esri.WorldImagery)
-   
-   #export
-   st_write(final_outlines, "data/settlement_outlines/final/third_run/final_outlines.shp", delete_layer = TRUE)
-   
-   final_outlines <- st_read('data/settlement_outlines/final/third_run/final_outlines.shp') %>% st_transform(crs = 32737)
-   
-   st_write(na_buffer, 'data/settlement_outlines/final/third_run/na_buffer.shp')
-   
-      #Step 6) Ground truth against GRID 3 data
+   #Step 6) Ground truth - GRID3
    
    # List feature classes
    
@@ -404,45 +373,6 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    GRID_ssa_bua <- rbind(ssa_extents, bua_extents)
    
-   #calculate area overlap percentages 
-   
-   intersect <- st_intersection(final_outlines, GRID_all) %>% 
-     mutate(intersect_area = st_area(.)) %>% 
-     dplyr::select(ID, intersect_area) %>% 
-     st_drop_geometry()
-   
-   GRID_all$sqm <- st_area(GRID_all)
-   
-   GRID_all$sqkm <- units::set_units(GRID_all$sqm, km^2)
-   
-   total_intersect_area <- sum(intersect$intersect_area)
-   
-   total_intersect_area
-   
-   total_GRID_area <- sum(GRID_all$sqm)
-   
-   total_GRID_area
-   
-   (total_intersect_area/total_GRID_area)*100
-   
-   #35% of the GRID polygons intersect with our outlines
-   
-   intersect <- st_intersection(GRID_ssa_bua, final_outlines) %>% 
-     mutate(intersect_area = st_area(.)) %>% 
-     dplyr::select(ID, intersect_area)
-
-   GRID_ssa_bua$sqm <- st_area(GRID_ssa_bua)
-   
-   GRID_ssa_bua$sqkm <- units::set_units(GRID_ssa_bua$sqm, km^2)
-   
-   total_intersect_area <- sum(intersect$intersect_area)
-   
-   total_GRID_area <- sum(GRID_ssa_bua$sqm)
-   
-   total_outline_area <- sum(final_outlines$area_sqm)
-   
-   (total_intersect_area/total_GRID_area)*100
-   
    #precision and recall
    #GRID3
 
@@ -475,10 +405,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    recall <- sum(TP/(TP+FN))
    recall
    
-   F1 <- 2*((precision*recall)/(precision+recall))
-   F1
-   
-   #WUFL
+   #Step 7) Ground Truth - WUFL
    
    WSF <- raster::raster('data/ground-truth//wsf/WSF2015_v1_EPSG4326_e030_n00_e040_s10.tif')
    
@@ -536,37 +463,10 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    recall_wsf <- sum(TP_wsf/(TP_wsf+FN_wsf))
    recall_wsf
-   
-   F1_wsf <- 2*((precision_wsf*recall_wsf)/(precision_wsf+recall_wsf))
-   F1_wsf
 
-
-
-     
-   #58% of the polygons intersect
-   
    #Step 7) Results Stats
    
-   (sum(final_outlines$area_sqkm)/sum(monduli_district$area_sqkm))
-   
-   sum(final_outlines$area_sqkm)
-   
-   sum(final_outlines$pt_count)
-   
-   summary(final_outlines$pt_count)
-   
-   summary(final_outlines$area_sqkm)
-   
-   getmode <- function(v) {
-     uniqv <- unique(v)
-     uniqv[which.max(tabulate(match(v, uniqv)))]
-   }
-
-   getmode(final_outlines$pt_count) 
-   
    box <- as.data.frame(final_outlines$pt_count)
-   
-   ggplot(final_outlines, aes(x=pt_count) + geom_boxplot())
    
    boxplot(box, log = "x", col = "lightblue", border = "darkgreen",
            xlab = "Number of Buildings (Log Scale)",
@@ -576,9 +476,16 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    final_outlines$density <- final_outlines$pt_count / final_outlines$area_sqkm
    
-   summary(final_outlines$density)
+   st_write(final_outlines, "data//final/final_outlines.shp", delete_layer = TRUE)
    
-   st_write(final_outlines, "data/settlement_outlines/final_outlines.shp", delete_layer = TRUE)
+   final_outlines <- st_read('data/final/final_outlines.shp') %>% st_transform(crs = 32737)
    
-   final_outlines <- st_read('data/settlement_outlines/final_outlines.shp') %>% st_transform(crs = 32737)
+   final_outlines <- smoothr::smooth(final_outlines, method = "chaikin")
+   
+   tm_shape(final_outlines)+tm_borders()
+   
+   st_write(final_outlines, "data/final/final_outlines_smooth.shp", delete_layer = TRUE)
+   
+   final_outlines <- st_read('data/final/final_outlines_smooth.shp') %>% st_transform(crs = 32737)
+   
    
