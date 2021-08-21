@@ -17,7 +17,6 @@ library(rgeos)
 library(dbscan)
 tmap_mode("view")
 
-
 #Step 0) Setting Up
   #footprints
   tnz_bf <- st_read('data/footprints/Tanzania_2019-09-16/Tanzania.geojson')
@@ -301,7 +300,9 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    monduli_district$area_sqkm <- units::set_units(monduli_district$area_sqm, km^2)
    
-   (sum(final_outlines$area_sqkm)/sum(monduli_district$area_sqkm))*100
+   (sum(final_outlines$ar_sqkm)/sum(monduli_district$area_sqkm))*100
+   
+   sum(final_outlines$ar_sqkm)
    
 #Step 6) Does the data look right?
    
@@ -311,7 +312,9 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    final_outlines$pt_count <- lengths(st_intersects(final_outlines, centroids))
    
-   summary(final_outlines$pt_count)
+   summary(final_outlines$pt_cont)
+   
+   summary(final_outlines$ar_sqkm)
    
     tm_shape(final_outlines)+tm_polygons(col = "pt_count", alpha = 0.5, palette = "viridis")+
      tm_shape(monduli_district)+tm_borders()
@@ -466,10 +469,18 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
 
    #Step 7) Results Stats
    
-   box <- as.data.frame(final_outlines$pt_count)
+   box <- as.data.frame(final_outlines$pt_cont)
    
    boxplot(box, log = "x", col = "lightblue", border = "darkgreen",
            xlab = "Number of Buildings (Log Scale)",
+           ylab = "Delineations",
+           horizontal = TRUE,
+           notch = TRUE)
+   
+   box2 <- as.data.frame(final_outlines$ar_sqkm)
+   
+   boxplot(box2, log = "x", col = "lightblue", border = "darkgreen",
+           xlab = "Area of Settlement (Log Scale)",
            ylab = "Delineations",
            horizontal = TRUE,
            notch = TRUE)
@@ -488,4 +499,13 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    final_outlines <- st_read('data/final/final_outlines_smooth.shp') %>% st_transform(crs = 32737)
    
+   #Step 8) calculate footprint stats
+   
+   footprint_settlements <- footprints_proj[final_outlines,]
+   
+   footprint_settlements$area_sqm <- st_area(footprint_settlements)
+   
+   footprint_settlements$area_sqkm <- units::set_units(footprint_settlements$area_sqm, km^2)
+   
+   sum(footprint_settlements$area_sqkm)
    
