@@ -25,5 +25,5 @@ The final settlement outlines delinated as part of this analysis can be seen bel
 ![image](https://github.com/KKCV6/dissertation/blob/main/images/settlements_github.PNG)
 
 ## References ##
-Arribas-Bel, D., M. Garcia-López and E. Viladecans-Marsal (2019) 'Building(s) and cities: Delineating urban areas with a machine learning algorithm', Journal of Urban Economics, October, 103217.
-Jochem, W. C., T. J. Bird and A. J. Tatem (2018) 'Identifying residential neighbourhood types from settlement points in a machine learning approach', Computers, Environment and Urban Systems, 69, 104–113
+* Arribas-Bel, D., M. Garcia-López and E. Viladecans-Marsal (2019) 'Building(s) and cities: Delineating urban areas with a machine learning algorithm', Journal of Urban Economics, October, 103217.
+* Jochem, W. C., T. J. Bird and A. J. Tatem (2018) 'Identifying residential neighbourhood types from settlement points in a machine learning approach', Computers, Environment and Urban Systems, 69, 104–113
