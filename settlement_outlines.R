@@ -30,7 +30,7 @@ tmap_mode("view")
   
   monduli_district <- filter(tnz_districts, NAME_2 == "Monduli") %>% st_transform(crs = 4326)
   
-  #lip footprints
+  #clip footprints
   
   MS_bf <-  tnz_bf[monduli_district,]
   
