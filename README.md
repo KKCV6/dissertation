@@ -11,12 +11,21 @@ It advances on previous research in the field and shows that:
 * Accurate and spatially contiguous data can be created from open data sources
 
 ## Data Sources ##
-Two sources of building footprints are used in this analysis:
+The sources of data used in this analysis are:
 
-Dataset       | Download Location
-------------- | -------------
-Microsoft     | [Link](https://github.com/microsoft/Uganda-Tanzania-Building-Footprints, "Link")
-HOT OSM       | [Link](https://data.humdata.org/dataset/hotosm_tza_buildings, "Link")
+Dataset              | Download Location
+---------------------| ------------------
+Microsoft Buildings  | [Link](https://github.com/microsoft/Uganda-Tanzania-Building-Footprints, "Link")
+HOT OSM Buildings    | [Link](https://data.humdata.org/dataset/hotosm_tza_buildings, "Link")
+Tanzania Boundaries  | [Link](https://gadm.org/download_country_v3.html, "Link")
+
+The ground-truth data we used to compare with our final delineations can be found here:
+
+Dataset                                 | Download Location
+----------------------------------------| ------------------
+GRID3 Settlement Extent Version 01 (SE) | [Link](https://data.grid3.org/search?tags=all(Settlement%20Extents,TZA), "Link")
+World Settlement Footprint (WSF)        | [Link](https://figshare.com/articles/dataset/World_Settlement_Footprint_WSF_2015/10048412, "Link")
+
 
 ## Final Outlines ##
 
