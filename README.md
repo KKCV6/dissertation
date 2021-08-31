@@ -5,7 +5,7 @@ This research project focuses on delineating settlement outlines from openly acc
 Following emerging research on delineating urban areas from building footprints (Jochem et al. 2018; Arribas-Bel et al. 2019), this research aims to implement a bottom-up approach to define settlements, using the Density Based Spatial Clustering of Application with Noise (DBSCAN) clustering algorithm to group buildings based on density and distance parameters. 
 
 It advances on previous research in the field and shows that:
-* The application of a concave hull, rather than the comparable, convex hull is more advanced though advantagous with the ability to capture more accurately on-the-ground settlement geometries
+* The application of a concave hull, rather than the comparable convex hull, is more advanced though advantagous with the ability to capture more accurately on-the-ground settlement geometries
 * A second iteration clustering creates more cohesive settlements and recognises multi-density clusters across the dataset
 * Simple point representations of buildings can be used to delineate settlement extent
 * Accurate and spatially contiguous data can be created from open data sources
