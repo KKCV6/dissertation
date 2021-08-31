@@ -17,19 +17,21 @@ library(rgeos)
 library(dbscan)
 tmap_mode("view")
 
+
 #Step 0) Setting Up
-  #footprints
-  tnz_bf <- st_read('data/footprints/Tanzania_2019-09-16/Tanzania.geojson')
+  #Microsoft footprints
+  tnz_bf <- st_read('data/footprints/Tanzania_2019-09-16/Tanzania.geojson') %>% st_transform(crs = 4326)
   
+  #OSM footprints
   osm_footprints <- st_read('data/footprints/osm_footprints.shp')%>% st_transform(crs = 4326)
 
   #boundaries
   tnz_districts <- st_read('data/boundaries/tanzania_gadm/gadm36_TZA_2.shp')
   
-  tnz_bf <- st_transform(tnz_bf, crs = 32737)
-
-  #filter
   monduli_district <- filter(tnz_districts, NAME_2 == "Monduli") %>% st_transform(crs = 4326)
+  
+  #lip footprints
+  
   MS_bf <-  tnz_bf[monduli_district,]
   
   osm_footprints <- osm_footprints[monduli_district,]
@@ -40,7 +42,7 @@ tmap_mode("view")
   
   #isolate non-intersecting footprints
   
-  non_overlapping <-  monduli_bf[lengths(st_intersects(monduli_bf,osm_footprints))==0,] %>% st_cast('MULTIPOLYGON')
+  non_overlapping <-  MS_bf[lengths(st_intersects(MS_bf,osm_footprints))==0,] %>% st_cast('MULTIPOLYGON')
   
   tm_shape(non_overlapping)+tm_borders()+
     tm_shape(osm_footprints)+tm_polygons(col = "blue", alpha = 0.5)
@@ -72,18 +74,19 @@ tmap_mode("view")
   
   #points
   points <- st_coordinates(centroids)
-  
+
   #DBScan
+  
   dbscan <- dbscan::dbscan(points, eps = 125, minPts = 5)
   plot(points, col=dbscan$cluster)
   plot(monduli_district$geometry, add=T)
-
+  
   #assign building footprint to a cluster
   points_wcluster <- as.data.frame(points) %>% mutate(dbcluster=dbscan$cluster)
 
   #Create settlement outlines from Building Footprints and DB-Scan cluster
   geometry_list <- vector(mode = "list", length = max(points_wcluster$dbcluster))
-
+  
   counter <-1
 
   for (cluster_index in seq(1, max(points_wcluster$dbcluster))) {
@@ -104,7 +107,7 @@ tmap_mode("view")
 }
 
   hulls <- st_sfc(geometry_list, crs = 32737)
-
+  
   st_write(hulls, "data/final/bf_outlines.shp", delete_layer = TRUE)
 
   bf_outlines <- st_read('data/final/bf_outlines.shp')
@@ -132,6 +135,8 @@ tmap_mode("view")
 
   #assign building footprint to a cluster
   points_wcluster <- as.data.frame(points) %>% mutate(dbcluster=dbscan$cluster)
+  
+  unique <- unique(points_wcluster$dbcluster)
 
   geometry_list <- vector(mode = "list", length = max(points_wcluster$dbcluster))
 
@@ -155,7 +160,7 @@ tmap_mode("view")
 }
 
   hulls <- st_sfc(geometry_list, crs = 32737)
-
+  
   st_write(hulls, "data/final/catch_outlines.shp", delete_layer = TRUE)
 
   catch_outlines <- st_read('data/final/catch_outlines.shp') %>% st_transform(crs = 32737)
@@ -218,7 +223,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   geometry_list <- vector(mode = "list", length = max(points_wcluster$cluster))
   
   seq <- unique(points_wcluster$cluster)
-
+  
   counter < -1
   
   for (cluster_index in seq) {
@@ -244,9 +249,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
 
   settlement_outlines <- st_read('data/final/settlement_outlines.shp')
   
-  qtm(settlement_outlines)
-
-    tm_shape(settlement_outlines)+
+  tm_shape(settlement_outlines)+
     tm_polygons(col = "purple", alpha = 0.5)
 
   #Difference analysis to extract standalone settlements
@@ -281,15 +284,13 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
   final_outlines<-  outline_buffer %>% st_sf %>% st_cast()
   
   final_outlines$ID <- 1:nrow(final_outlines)
-  
+
     #have a look at our final outlines
   
    tm_shape(final_outlines)+
     tm_polygons(col = "purple", alpha = 0.5)+
      tm_scale_bar(position = c("left", "bottom"))
-   
-    tm_basemap(leaflet::providers$Esri.WorldImagery)
-     
+
 #Step 5) Calculate areas
    
    final_outlines$area_sqm <- st_area(final_outlines)
@@ -299,11 +300,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    monduli_district$area_sqm <- st_area(monduli_district)
    
    monduli_district$area_sqkm <- units::set_units(monduli_district$area_sqm, km^2)
-   
-   (sum(final_outlines$ar_sqkm)/sum(monduli_district$area_sqkm))*100
-   
-   sum(final_outlines$ar_sqkm)
-   
+
 #Step 6) Does the data look right?
    
    #how many building footprints are within each settlement
@@ -313,9 +310,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    final_outlines$pt_count <- lengths(st_intersects(final_outlines, centroids))
    
    summary(final_outlines$pt_cont)
-   
-   summary(final_outlines$ar_sqkm)
-   
+
     tm_shape(final_outlines)+tm_polygons(col = "pt_count", alpha = 0.5, palette = "viridis")+
      tm_shape(monduli_district)+tm_borders()
    
@@ -374,10 +369,9 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    GRID_all <- rbind(ssa_extents, bua_extents, hamlet_extents)
    
-   GRID_ssa_bua <- rbind(ssa_extents, bua_extents)
-   
    #precision and recall
-   #GRID3
+   
+    #GRID3
 
    intersect_tibble <- st_intersects(final_outlines, GRID_all, sparse = FALSE)
    
@@ -436,9 +430,7 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    WSF_sf <- WSF_sf[monduli_proj,]
    
-   tm_shape(WSF_sf)+tm_borders()+
-      tm_shape(final_outlines)+tm_fill("blue", alpha = 0.5)+
-      tm_shape(monduli_proj)+tm_borders()
+   qtm(WSF_sf)
    
    intersect_WSF <- st_intersects(final_outlines, WSF_sf, sparse = FALSE)
    
@@ -473,21 +465,19 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    boxplot(box, log = "x", col = "lightblue", border = "darkgreen",
            xlab = "Number of Buildings (Log Scale)",
-           ylab = "Delineations",
+           ylab = "Settlements Delineated",
            horizontal = TRUE,
            notch = TRUE)
    
    box2 <- as.data.frame(final_outlines$ar_sqkm)
    
    boxplot(box2, log = "x", col = "lightblue", border = "darkgreen",
-           xlab = "Area of Settlement (Log Scale)",
-           ylab = "Delineations",
+           xlab = "Area of Settlement km^2 (Log Scale)",
+           ylab = "Settlements Delineated",
            horizontal = TRUE,
            notch = TRUE)
-   
-   final_outlines$density <- final_outlines$pt_count / final_outlines$area_sqkm
-   
-   st_write(final_outlines, "data//final/final_outlines.shp", delete_layer = TRUE)
+
+   st_write(final_outlines, "data/final/final_outlines.shp", delete_layer = TRUE)
    
    final_outlines <- st_read('data/final/final_outlines.shp') %>% st_transform(crs = 32737)
    
@@ -501,11 +491,11 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    
    #Step 8) calculate footprint stats
    
-   footprint_settlements <- footprints_proj[final_outlines,]
+   #footprint_settlements <- footprints_proj[final_outlines,]
    
-   footprint_settlements$area_sqm <- st_area(footprint_settlements)
+   #footprint_settlements$area_sqm <- st_area(footprint_settlements)
    
-   footprint_settlements$area_sqkm <- units::set_units(footprint_settlements$area_sqm, km^2)
+   #footprint_settlements$area_sqkm <- units::set_units(footprint_settlements$area_sqm, km^2)
    
-   sum(footprint_settlements$area_sqkm)
-   
+   #sum(footprint_settlements$area_sqkm)
+
