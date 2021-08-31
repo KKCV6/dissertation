@@ -1,6 +1,7 @@
 # Delineating Settlement Outlines in Monduli, Tanzania #
 
-![R](https://img.shields.io/badge/r-%23276DC3.svg?style=for-the-badge&logo=r&logoColor=white)
+[![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![GitHub commits](https://img.shields.io/github/commits-since/Naereen/StrapDown.js/v1.0.0.svg)](https://GitHub.com/Naereen/StrapDown.js/commit/)
 
 This research project focuses on delineating settlement outlines from openly accessible building footprint data, contributing to the Data for Good Movement by outputting vector polygons fully integratable with OSM.
 
