@@ -1,3 +1,7 @@
+#Code development
+
+#Note this code builds on previous work undertaken by Dr. Joanna Wilkin for the GEOG0114 Principle of Spatial Analysis Module at the Department of Geography in UCL
+
 # load our required libraries 
 library(here)
 library(tidyverse)
