@@ -461,6 +461,12 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
 
    #Step 7) Results Stats
    
+   summary(final_outlines$pt_cont)
+   summary(final_outlines$area_sqkm)
+   
+   sum(final_outlines$area_sqkm)
+   sum(monduli_district$area_sqkm)
+   
    box <- as.data.frame(final_outlines$pt_cont)
    
    boxplot(box, log = "x", col = "lightblue", border = "darkgreen",
@@ -498,4 +504,6 @@ tm_shape(catch_outlines) + tm_borders(lwd = 3)+
    #footprint_settlements$area_sqkm <- units::set_units(footprint_settlements$area_sqm, km^2)
    
    #sum(footprint_settlements$area_sqkm)
+   
+
 
