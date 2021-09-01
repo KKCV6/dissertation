@@ -4,6 +4,8 @@
 
 This research project focuses on delineating settlement outlines from openly accessible building footprint data, contributing to the Data for Good Movement by outputting vector polygons fully integratable with OSM.
 
+Note: this code builds on previous work undertaken by Dr. Joanna Wilkin for the GEOG0114 Principle of Spatial Analysis Module at the Department of Geography in UCL
+
 ## Methodology ##
 Following emerging research on delineating urban areas from building footprints (Jochem et al. 2018; Arribas-Bel et al. 2019; de Bellefon et al. 2019), this research aims to implement a bottom-up approach to define settlements, using the Density Based Spatial Clustering of Application with Noise (DBSCAN) clustering algorithm to group buildings based on density and distance parameters. 
 
